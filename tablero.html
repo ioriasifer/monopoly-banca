@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero Central - Monopoly</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px; }
+        .board-container { width: 100%; max-width: 800px; background: #1e293b; border-radius: 20px; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.5); border: 2px solid #22c55e; }
+        h1 { text-align: center; color: #22c55e; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
+        .player-card { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 20px; border-radius: 12px; margin-bottom: 10px; border-left: 8px solid #2ecc71; transition: 0.3s; }
+        .player-info { display: flex; align-items: center; gap: 15px; }
+        .player-name { font-size: 24px; font-weight: bold; }
+        .player-balance { font-size: 28px; font-family: 'Courier New', Courier, monospace; color: #2ecc71; font-weight: bold; }
+        .game-id-display { background: #475569; padding: 10px 20px; border-radius: 50px; margin-bottom: 20px; font-weight: bold; }
+        #setup-monitor { text-align: center; }
+        input, button { padding: 12px; border-radius: 8px; border: none; font-size: 16px; }
+        button { background: #22c55e; color: white; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="setup-monitor">
+        <h1>Monitor de Partida</h1>
+        <input type="text" id="game-id-input" placeholder="Ingresa el ID de la Mesa">
+        <button onclick="conectarMonitor()">Ver Tablero</button>
+    </div>
+
+    <div id="board" class="board-container" style="display: none;">
+        <div class="game-id-display" id="id-tag">MESA: ---</div>
+        <h1>Ranking de Millonarios</h1>
+        <div id="players-list">
+            </div>
+    </div>
+
+<script>
+    // --- USA LA MISMA CONFIGURACIÓN QUE EN TU INDEX.HTML ---
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        databaseURL: "TU_DATABASE_URL",
+        projectId: "TU_PROJECT_ID"
+    };
+    // -------------------------------------------------------
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function conectarMonitor() {
+        const gameId = document.getElementById('game-id-input').value.toUpperCase();
+        if(!gameId) return alert("Pon el ID");
+
+        document.getElementById('setup-monitor').style.display = 'none';
+        document.getElementById('board').style.display = 'block';
+        document.getElementById('id-tag').innerText = "SALA: " + gameId;
+
+        // Escuchar cambios en TODOS los jugadores de esa partida
+        db.ref(`partidas/${gameId}/jugadores`).on('value', (snapshot) => {
+            const players = snapshot.val();
+            const listDiv = document.getElementById('players-list');
+            listDiv.innerHTML = '';
+
+            // Convertir objeto a Array para ordenar por dinero
+            let sortable = [];
+            for (let name in players) {
+                sortable.push({name: name, balance: players[name].balance});
+            }
+            sortable.sort((a, b) => b.balance - a.balance); // El más rico primero
+
+            sortable.forEach(p => {
+                listDiv.innerHTML += `
+                    <div class="player-card">
+                        <div class="player-info">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                        <div class="player-balance">$${p.balance.toLocaleString('es-ES')}</div>
+                    </div>
+                `;
+            });
+        });
+    }
+</script>
+</body>
+</html>
