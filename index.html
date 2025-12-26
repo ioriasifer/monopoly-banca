@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly: Banca Millonaria</title>
+    <title>Monopoly: Banca 215M</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -80,9 +80,9 @@
         </div>
 
         <div style="background: var(--card); padding: 15px; border-radius: 20px; margin-top: 15px;">
-            <label style="font-size: 12px; color: var(--text-dim)">TRANSFERIR MILLONES (ej: 1.75):</label>
+            <label style="font-size: 12px; color: var(--text-dim)">PAGO EN MILLONES (ej: 1.75):</label>
             <select id="select-target"></select>
-            <input type="number" id="pay-amount" step="0.01" placeholder="Ej: 0.5 o 1.75">
+            <input type="number" id="pay-amount" step="0.01" placeholder="Monto en Millones">
             <button onclick="transferir()">Enviar Pago</button>
         </div>
     </div>
@@ -100,7 +100,7 @@
     </nav>
 
 <script>
-    // --- FIREBASE CONFIG ---
+    // --- FIREBASE CONFIG (Asegúrate de poner tus llaves aquí) ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
         authDomain: "monopolybanca-14545.firebaseapp.com",
@@ -124,7 +124,8 @@
         const ref = db.ref(`partidas/${gameId}/jugadores/${myName}`);
         ref.once('value', (s) => {
             if(!s.exists()) {
-                const saldoInicial = esBanco ? 201000000 : 15000000;
+                // BANCO inicia con 215M, Jugadores con 15M
+                const saldoInicial = esBanco ? 215000000 : 15000000;
                 ref.set({ balance: saldoInicial });
                 registrarLog("SISTEMA", `${myName} entró al juego`);
             }
@@ -215,7 +216,6 @@
     }
 
     function transferir() {
-        // Lógica de abreviación: se multiplica el input por 1,000,000
         const inputVal = parseFloat(document.getElementById('pay-amount').value);
         if(!inputVal || inputVal <= 0) return;
         const montoReal = inputVal * 1000000;
