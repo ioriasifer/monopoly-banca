@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly: Sistema Bancario Final</title>
+    <title>Monopoly: Sistema con Sonidos Drive</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; --gold: #f1c40f; --danger: #ef4444; --text-dim: #94a3b8; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
-        /* Efecto Crisis y Bancarrota */
+        /* Efecto Crisis */
         @keyframes pulse-red {
             0% { box-shadow: inset 0 0 10px #ef4444; background-color: #0f172a; }
             50% { box-shadow: inset 0 0 50px #ef4444; background-color: #450a0a; }
@@ -26,13 +26,14 @@
         /* Pantalla Game Over */
         #screen-gameOver { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
-        /* Colores y UI */
+        /* Colores */
         .color-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .color-dot { height: 45px; border-radius: 12px; border: 3px solid transparent; cursor: pointer; opacity: 0.5; position: relative; transition: 0.3s; }
         .color-dot.selected { border-color: white; opacity: 1; transform: scale(1.1); }
         .color-dot.taken { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
         .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; }
 
+        /* UI */
         .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 30px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
         .bank-header { background: linear-gradient(135deg, #f1c40f, #f39c12) !important; color: #000 !important; }
         input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
@@ -45,7 +46,7 @@
         .bank-ctrl-group { background: #334155; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--gold); position: relative; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
         .btn-mini { padding: 8px; font-size: 11px; background: #475569; }
-        .btn-delete { background: var(--danger); width: auto; padding: 5px 10px; font-size: 10px; position: absolute; top: 10px; right: 10px; }
+        .btn-delete { background: var(--danger); width: auto; padding: 5px 10px; font-size: 10px; position: absolute; top: 10px; right: 10px; border-radius: 6px; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; z-index: 100; }
         .nav-item { color: var(--text-dim); cursor: pointer; font-size: 12px; }
@@ -55,18 +56,17 @@
 <body id="main-body">
 
     <div id="screen-gameOver">
-        <h1 style="color:var(--danger); font-size: 60px; margin: 0;">💸</h1>
         <h1 style="color:var(--danger); font-size: 40px;">BANCARROTA</h1>
-        <p style="color:white; opacity: 0.7;">Te has quedado sin fondos...</p>
-        <button onclick="location.reload()" style="width:auto; padding: 10px 40px; margin-top: 20px;">VOLVER AL INICIO</button>
+        <p style="color:white; opacity: 0.7;">Tus fondos han llegado a cero.</p>
+        <button onclick="location.reload()" style="width:auto; padding: 10px 40px; margin-top: 20px;">REINTENTAR</button>
     </div>
 
     <div id="screen-login" class="screen active">
-        <h1 style="text-align:center">🏦 Monopoly System</h1>
+        <h1 style="text-align:center">🏦 Monopoly Bank</h1>
         <input type="text" id="game-id" placeholder="ID Mesa" onchange="checkTakenColors()">
         <input type="text" id="user-name" placeholder="Tu Nombre (o 'BANCO')">
         
-        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">TU COLOR:</p>
+        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">ELIGE COLOR:</p>
         <div class="color-picker" id="picker-container">
             <div class="color-dot" style="background:#ef4444" onclick="selectColor('#ef4444', this)" id="c-#ef4444"></div>
             <div class="color-dot" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)" id="c-#3b82f6"></div>
@@ -75,14 +75,14 @@
             <div class="color-dot" style="background:#f97316" onclick="selectColor('#f97316', this)" id="c-#f97316"></div>
             <div class="color-dot" style="background:#06b6d4" onclick="selectColor('#06b6d4', this)" id="c-#06b6d4"></div>
         </div>
-        <button onclick="conectar()">ENTRAR AL JUEGO</button>
+        <button onclick="conectar()">ACCEDER</button>
     </div>
 
     <div id="screen-wallet" class="screen">
-        <div class="crisis-text">⚠️ ¡ATENCIÓN: POCOS FONDOS! ⚠️</div>
+        <div class="crisis-text">⚠️ ¡FONDOS CRÍTICOS! ⚠️</div>
         <h2 id="display-my-name">...</h2>
         <div id="wallet-card" class="balance-card">
-            <small>TU SALDO ACTUAL</small>
+            <small>SALDO DISPONIBLE</small>
             <div style="font-size: 32px; font-weight: 800;">$<span id="my-balance">0</span></div>
         </div>
 
@@ -91,17 +91,17 @@
         </div>
 
         <div style="background: var(--card); padding: 15px; border-radius: 20px;">
-            <label style="font-size: 12px; color: var(--text-dim)">TRANSFERIR MILLONES (ej: 1.5):</label>
+            <label style="font-size: 12px; color: var(--text-dim)">PAGAR (Ejemplo: 1.5 para 1,5M):</label>
             <select id="select-target"></select>
             <input type="number" id="pay-amount" step="0.01" placeholder="Monto">
-            <button onclick="transferir()">Enviar Pago</button>
+            <button onclick="transferir()">Realizar Pago</button>
         </div>
     </div>
 
     <div id="screen-board" class="screen">
-        <h2>Ranking Global</h2>
+        <h2>Ranking</h2>
         <div id="all-players-list"></div>
-        <h2 style="margin-top:20px">Historial</h2>
+        <h2 style="margin-top:20px">Historial de Turnos</h2>
         <div id="history-list" style="background: var(--card); border-radius: 15px; height: 350px; overflow-y: auto;"></div>
     </div>
 
@@ -111,18 +111,20 @@
     </nav>
 
 <script>
-    // --- SONIDOS PERSONALIZABLES ---
-    const soundPay = new Audio('https://docs.google.com/uc?export=open&id=1GLhuLFagx4P7hMaW1_ZrvLKcB8ANu0Xj'); 
+    // --- SONIDOS DESDE GOOGLE DRIVE (ENLACES DIRECTOS) ---
     const soundGameOver = new Audio('https://docs.google.com/uc?export=open&id=1w6nUF5t-Cgn5zUeJDrtrzjZvrwW-ytmM');
+    const soundPay = new Audio('https://docs.google.com/uc?export=open&id=1GLhuLFagx4P7hMaW1_ZrvLKcB8ANu0Xj');
 
-    const firebaseConfig = { apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
+    const firebaseConfig = { 
+       apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
         authDomain: "monopolybanca-14545.firebaseapp.com",
         databaseURL: "https://monopolybanca-14545-default-rtdb.firebaseio.com",
         projectId: "monopolybanca-14545",
         storageBucket: "monopolybanca-14545.firebasestorage.app",
         messagingSenderId: "1080857855874",
         appId: "1:1080857855874:web:86ee79aabeb6437343f19b",
-        measurementId: "G-412MR78Z6J" };
+        measurementId: "G-412MR78Z6J" 
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -152,14 +154,14 @@
         myName = document.getElementById('user-name').value.trim();
         if(!gameId || !myName) return;
         esBanco = (myName.toUpperCase() === "BANCO");
-        if(!esBanco && myColor === "#ffffff") return alert("Elige un color");
+        if(!esBanco && myColor === "#ffffff") return alert("Selecciona un color");
         if(esBanco) myColor = "#f1c40f";
 
         db.ref(`partidas/${gameId}/jugadores/${myName}`).once('value', (s) => {
             if(!s.exists()) {
                 const saldo = esBanco ? 215000000 : 15000000;
                 db.ref(`partidas/${gameId}/jugadores/${myName}`).set({ balance: saldo, color: myColor });
-                registrarLog("SISTEMA", `${myName} entró`, myColor);
+                registrarLog("SISTEMA", `${myName} se unió`, myColor);
             } else { myColor = s.val().color; }
             iniciarSinc();
         });
@@ -172,12 +174,10 @@
                 document.getElementById('my-balance').innerText = b.toLocaleString('es-ES');
                 
                 if(!esBanco) {
-                    // Bancarrota
                     if(b <= 0) {
                         document.getElementById('screen-gameOver').style.display = 'flex';
-                        soundGameOver.play().catch(e => {});
+                        soundGameOver.play().catch(e => console.log("Permiso de audio requerido"));
                     } 
-                    // Alerta de crisis
                     else if(b <= 1000000) document.getElementById('main-body').classList.add('crisis-mode');
                     else document.getElementById('main-body').classList.remove('crisis-mode');
                 }
@@ -262,7 +262,10 @@
             if(a >= mon) {
                 db.ref(`partidas/${gameId}/jugadores/${des}/balance`).transaction(s => (s || 0) + mon);
                 registrarLog(ori, msg, myColor);
-                if(!esBanco) { soundPay.currentTime = 0; soundPay.play().catch(e => {}); }
+                if(!esBanco) { 
+                    soundPay.currentTime = 0; 
+                    soundPay.play().catch(e => console.log("Interacción requerida")); 
+                }
                 return a - mon;
             }
             alert("Saldo insuficiente"); return a;
