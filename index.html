@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly: Sistema Bancario Pro</title>
+    <title>Monopoly: Sistema Bancario Final</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; --gold: #f1c40f; --danger: #ef4444; --text-dim: #94a3b8; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
-        /* Efecto Crisis para Jugadores */
+        /* Efecto Crisis y Bancarrota */
         @keyframes pulse-red {
             0% { box-shadow: inset 0 0 10px #ef4444; background-color: #0f172a; }
             50% { box-shadow: inset 0 0 50px #ef4444; background-color: #450a0a; }
@@ -24,16 +24,15 @@
         .active { display: block; }
 
         /* Pantalla Game Over */
-        #screen-gameOver { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #screen-gameOver { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
-        /* Colores */
+        /* Colores y UI */
         .color-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .color-dot { height: 45px; border-radius: 12px; border: 3px solid transparent; cursor: pointer; opacity: 0.5; position: relative; transition: 0.3s; }
         .color-dot.selected { border-color: white; opacity: 1; transform: scale(1.1); }
         .color-dot.taken { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
         .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; }
 
-        /* Componentes */
         .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 30px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
         .bank-header { background: linear-gradient(135deg, #f1c40f, #f39c12) !important; color: #000 !important; }
         input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
@@ -43,7 +42,6 @@
         .log-entry { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; padding: 10px; border-bottom: 1px solid #334155; }
         .log-avatar { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
 
-        /* Estilo Banco */
         .bank-ctrl-group { background: #334155; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--gold); position: relative; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
         .btn-mini { padding: 8px; font-size: 11px; background: #475569; }
@@ -57,17 +55,18 @@
 <body id="main-body">
 
     <div id="screen-gameOver">
-        <h1 style="color:var(--danger); font-size: 40px;">HAS PERDIDO</h1>
-        <p style="color:white">BANCARROTA</p>
-        <button onclick="location.reload()" style="width:auto; padding: 10px 20px;">Reiniciar</button>
+        <h1 style="color:var(--danger); font-size: 60px; margin: 0;">💸</h1>
+        <h1 style="color:var(--danger); font-size: 40px;">BANCARROTA</h1>
+        <p style="color:white; opacity: 0.7;">Te has quedado sin fondos...</p>
+        <button onclick="location.reload()" style="width:auto; padding: 10px 40px; margin-top: 20px;">VOLVER AL INICIO</button>
     </div>
 
     <div id="screen-login" class="screen active">
-        <h1 style="text-align:center">🏦 Monopoly Bank</h1>
+        <h1 style="text-align:center">🏦 Monopoly System</h1>
         <input type="text" id="game-id" placeholder="ID Mesa" onchange="checkTakenColors()">
         <input type="text" id="user-name" placeholder="Tu Nombre (o 'BANCO')">
         
-        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">ELIGE COLOR:</p>
+        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">TU COLOR:</p>
         <div class="color-picker" id="picker-container">
             <div class="color-dot" style="background:#ef4444" onclick="selectColor('#ef4444', this)" id="c-#ef4444"></div>
             <div class="color-dot" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)" id="c-#3b82f6"></div>
@@ -76,14 +75,14 @@
             <div class="color-dot" style="background:#f97316" onclick="selectColor('#f97316', this)" id="c-#f97316"></div>
             <div class="color-dot" style="background:#06b6d4" onclick="selectColor('#06b6d4', this)" id="c-#06b6d4"></div>
         </div>
-        <button onclick="conectar()">ENTRAR</button>
+        <button onclick="conectar()">ENTRAR AL JUEGO</button>
     </div>
 
     <div id="screen-wallet" class="screen">
-        <div class="crisis-text">⚠️ ¡DINERO CASI AGOTADO! ⚠️</div>
+        <div class="crisis-text">⚠️ ¡ATENCIÓN: POCOS FONDOS! ⚠️</div>
         <h2 id="display-my-name">...</h2>
         <div id="wallet-card" class="balance-card">
-            <small>SALDO</small>
+            <small>TU SALDO ACTUAL</small>
             <div style="font-size: 32px; font-weight: 800;">$<span id="my-balance">0</span></div>
         </div>
 
@@ -92,27 +91,30 @@
         </div>
 
         <div style="background: var(--card); padding: 15px; border-radius: 20px;">
-            <label style="font-size: 12px; color: var(--text-dim)">PAGAR MILLONES (ej: 1.75):</label>
+            <label style="font-size: 12px; color: var(--text-dim)">TRANSFERIR MILLONES (ej: 1.5):</label>
             <select id="select-target"></select>
-            <input type="number" id="pay-amount" step="0.01" placeholder="Ej: 0.5 o 2">
+            <input type="number" id="pay-amount" step="0.01" placeholder="Monto">
             <button onclick="transferir()">Enviar Pago</button>
         </div>
     </div>
 
     <div id="screen-board" class="screen">
-        <h2>Ranking</h2>
+        <h2>Ranking Global</h2>
         <div id="all-players-list"></div>
         <h2 style="margin-top:20px">Historial</h2>
-        <div id="history-list" style="background: var(--card); border-radius: 15px; height: 300px; overflow-y: auto;"></div>
+        <div id="history-list" style="background: var(--card); border-radius: 15px; height: 350px; overflow-y: auto;"></div>
     </div>
 
     <nav id="main-nav" class="nav-bar" style="display: none;">
-        <div class="nav-item active-nav" onclick="showScreen('wallet')">💰 Billetera</div>
-        <div class="nav-item" onclick="showScreen('board')">📊 Tablero</div>
+        <div class="nav-item active-nav" id="nav-wallet" onclick="showScreen('wallet')">💰 Billetera</div>
+        <div class="nav-item" id="nav-board" onclick="showScreen('board')">📊 Tablero</div>
     </nav>
 
 <script>
-    const soundPay = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+    // --- SONIDOS PERSONALIZABLES ---
+    const soundPay = new Audio('https://drive.google.com/file/d/1w6nUF5t-Cgn5zUeJDrtrzjZvrwW-ytmM/view?usp=sharing'); 
+    const soundGameOver = new Audio('https://drive.google.com/file/d/1GLhuLFagx4P7hMaW1_ZrvLKcB8ANu0Xj/view?usp=sharing');
+
     const firebaseConfig = { apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
         authDomain: "monopolybanca-14545.firebaseapp.com",
         databaseURL: "https://monopolybanca-14545-default-rtdb.firebaseio.com",
@@ -164,18 +166,21 @@
     }
 
     function iniciarSinc() {
-        db.ref(`partidas/${gameId}/jugadores/${myName}`).on('value', (s) => {
-            if (!s.exists() && document.getElementById('main-nav').style.display === 'flex') {
-                document.getElementById('screen-gameOver').style.display = 'flex';
-            }
-        });
-
         db.ref(`partidas/${gameId}/jugadores/${myName}/balance`).on('value', (s) => {
             if(s.exists()){
                 const b = s.val();
                 document.getElementById('my-balance').innerText = b.toLocaleString('es-ES');
-                if(!esBanco && b <= 1000000) document.getElementById('main-body').classList.add('crisis-mode');
-                else document.getElementById('main-body').classList.remove('crisis-mode');
+                
+                if(!esBanco) {
+                    // Bancarrota
+                    if(b <= 0) {
+                        document.getElementById('screen-gameOver').style.display = 'flex';
+                        soundGameOver.play().catch(e => {});
+                    } 
+                    // Alerta de crisis
+                    else if(b <= 1000000) document.getElementById('main-body').classList.add('crisis-mode');
+                    else document.getElementById('main-body').classList.remove('crisis-mode');
+                }
             }
         });
 
@@ -230,7 +235,7 @@
         document.getElementById('screen-login').classList.remove('active');
         document.getElementById('screen-wallet').classList.add('active');
         document.getElementById('main-nav').style.display = 'flex';
-        document.getElementById('display-my-name').innerText = esBanco ? "👑 BANCO" : myName;
+        document.getElementById('display-my-name').innerText = esBanco ? "👑 BANCO CENTRAL" : myName;
         document.getElementById('display-my-name').style.color = myColor;
     }
 
@@ -260,7 +265,7 @@
                 if(!esBanco) { soundPay.currentTime = 0; soundPay.play().catch(e => {}); }
                 return a - mon;
             }
-            alert("Sin fondos"); return a;
+            alert("Saldo insuficiente"); return a;
         });
     }
 
@@ -270,7 +275,9 @@
 
     function showScreen(s) {
         document.querySelectorAll('.screen').forEach(sc => sc.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
         document.getElementById('screen-' + s).classList.add('active');
+        event.currentTarget.classList.add('active-nav');
     }
 </script>
 </body>
