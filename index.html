@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly Master: Sistema 2026</title>
+    <title>Monopoly Pro 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; --gold: #f1c40f; --danger: #ef4444; --text-dim: #94a3b8; --jail: #64748b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
-        /* Notificación Recibida */
+        /* Notificación Simplificada */
         #notification-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; max-width: 400px; display: none; }
-        .notif-card { background: var(--primary); color: white; padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; animation: slideDown 0.5s ease; }
-        @keyframes slideDown { from { transform: translateY(-100px); } to { transform: translateY(0); } }
+        .notif-card { background: var(--primary); color: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); text-align: center; border: 2px solid white; animation: slideDown 0.5s ease; }
+        @keyframes slideDown { from { transform: translateY(-120%); } to { transform: translateY(0); } }
 
         /* Efecto Crisis */
         @keyframes pulse-red {
             0% { box-shadow: inset 0 0 10px #ef4444; }
-            50% { box-shadow: inset 0 0 50px #ef4444; background-color: #450a0a; }
+            50% { box-shadow: inset 0 0 60px #ef4444; background-color: #450a0a; }
             100% { box-shadow: inset 0 0 10px #ef4444; }
         }
         .crisis-mode { animation: pulse-red 1.5s infinite; }
@@ -26,30 +26,31 @@
         .screen { display: none; padding: 20px; max-width: 500px; margin: auto; }
         .active { display: block; }
 
-        /* Pantalla GameOver */
         #screen-gameOver { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
         /* Color Picker 10 Colores */
-        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; }
         .color-dot { height: 40px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; opacity: 0.5; position: relative; transition: 0.2s; }
-        .color-dot.selected { border-color: white; opacity: 1; transform: scale(1.1); }
+        .color-dot.selected { border-color: white; opacity: 1; transform: scale(1.15); }
         .color-dot.taken { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
-        .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 12px; }
+        .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 14px; }
 
-        /* UI Cards */
-        .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        /* UI Components */
+        .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
         .bank-header { background: linear-gradient(135deg, #f1c40f, #f39c12) !important; color: #000 !important; }
         input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
         button { background: var(--primary); border: none; font-weight: bold; cursor: pointer; }
         
-        .jail-btn { background: var(--jail); margin-top: 15px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
+        .jail-btn { background: var(--jail); margin-top: 10px; font-size: 14px; }
         .player-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 6px; border-left: 5px solid transparent; }
-        .log-entry { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; padding: 10px; border-bottom: 1px solid #334155; }
+        .log-entry { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; padding: 12px; border-bottom: 1px solid #334155; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; z-index: 100; }
-        .nav-item { color: var(--text-dim); cursor: pointer; font-size: 12px; }
+        .nav-item { color: var(--text-dim); cursor: pointer; font-size: 12px; text-align: center; }
         .active-nav { color: var(--primary); font-weight: bold; }
+
+        .bank-ctrl-group { background: #334155; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--gold); }
+        .btn-mini { padding: 8px; font-size: 11px; background: #475569; width: auto; margin-right: 5px; }
     </style>
 </head>
 <body id="main-body">
@@ -58,7 +59,7 @@
 
     <div id="screen-gameOver">
         <h1 style="color:var(--danger); font-size: 40px;">BANCARROTA</h1>
-        <button onclick="location.reload()" style="width:auto; padding: 10px 40px;">INICIO</button>
+        <button onclick="location.reload()" style="width:auto; padding: 12px 30px;">INICIO</button>
     </div>
 
     <div id="screen-login" class="screen active">
@@ -66,8 +67,8 @@
         <input type="text" id="game-id" placeholder="ID Mesa" onchange="checkTakenColors()">
         <input type="text" id="user-name" placeholder="Tu Nombre (o 'BANCO')">
         
-        <p style="font-size: 11px; color: var(--text-dim); text-align:center;">ELIGE TU COLOR:</p>
-        <div class="color-picker" id="picker-container">
+        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">ELIGE TU COLOR:</p>
+        <div class="color-picker">
             <div class="color-dot" style="background:#ef4444" onclick="selectColor('#ef4444', this)" id="c-#ef4444"></div>
             <div class="color-dot" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)" id="c-#3b82f6"></div>
             <div class="color-dot" style="background:#eab308" onclick="selectColor('#eab308', this)" id="c-#eab308"></div>
@@ -79,28 +80,25 @@
             <div class="color-dot" style="background:#ffffff" onclick="selectColor('#ffffff', this)" id="c-#ffffff"></div>
             <div class="color-dot" style="background:#64748b" onclick="selectColor('#64748b', this)" id="c-#64748b"></div>
         </div>
-        <button onclick="conectar()">ENTRAR AL JUEGO</button>
+        <button onclick="conectar()">ENTRAR</button>
     </div>
 
     <div id="screen-wallet" class="screen">
         <h2 id="display-my-name">...</h2>
         <div id="wallet-card" class="balance-card">
-            <small>TU SALDO</small>
+            <small>SALDO ACTUAL</small>
             <div style="font-size: 32px; font-weight: 800;">$<span id="my-balance">0</span></div>
         </div>
 
-        <div id="bank-panel" style="display:none; margin-bottom: 20px;">
+        <div id="bank-panel" style="display:none;">
             <div id="list-jugadores-banco"></div>
         </div>
 
         <div style="background: var(--card); padding: 15px; border-radius: 20px;">
             <select id="select-target"></select>
             <input type="number" id="pay-amount" step="0.01" placeholder="Monto (Ej: 1.5)">
-            <button onclick="transferir()">ENVIAR PAGO</button>
-            
-            <button id="jail-button" class="jail-btn" onclick="pagarCarcel()" style="display:none;">
-                ⛓️ PAGAR CÁRCEL ($0.5M)
-            </button>
+            <button onclick="transferir()">ENVIAR DINERO</button>
+            <button id="jail-button" class="jail-btn" onclick="pagarCarcel()" style="display:none;">⛓️ PAGAR CÁRCEL ($0.5M)</button>
         </div>
     </div>
 
@@ -117,11 +115,10 @@
     </nav>
 
 <script>
-    // --- SONIDOS DRIVE ---
     const soundGameOver = new Audio('https://docs.google.com/uc?export=open&id=1w6nUF5t-Cgn5zUeJDrtrzjZvrwW-ytmM');
     const soundPay = new Audio('https://docs.google.com/uc?export=open&id=1GLhuLFagx4P7hMaW1_ZrvLKcB8ANu0Xj');
 
-    const firebaseConfig = { apiKey: "TU_API_KEY", apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
+    const firebaseConfig = { apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
         authDomain: "monopolybanca-14545.firebaseapp.com",
         databaseURL: "https://monopolybanca-14545-default-rtdb.firebaseio.com",
         projectId: "monopolybanca-14545",
@@ -153,6 +150,18 @@
         });
     }
 
+    function showNotification(monto, deQuien) {
+        const box = document.getElementById('notification-box');
+        const millones = (monto / 1000000).toFixed(2);
+        box.innerHTML = `
+            <div class="notif-card">
+                <div style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">+$${millones}M</div>
+                <div style="font-size: 14px;">Recibiste un pago de <b>${deQuien}</b></div>
+            </div>`;
+        box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 5000);
+    }
+
     function conectar() {
         gameId = document.getElementById('game-id').value.toUpperCase();
         myName = document.getElementById('user-name').value.trim();
@@ -163,7 +172,7 @@
 
         db.ref(`partidas/${gameId}/jugadores/${myName}`).once('value', (s) => {
             if(!s.exists()) {
-                const inicial = esBanco ? 215000000 : 25000000; // Iniciando con 25M
+                const inicial = esBanco ? 215000000 : 25000000;
                 db.ref(`partidas/${gameId}/jugadores/${myName}`).set({ balance: inicial, color: myColor });
                 registrarLog("SISTEMA", `${myName} entró`, myColor);
             } else { myColor = s.val().color; }
@@ -171,33 +180,21 @@
         });
     }
 
-    function showNotification(monto, deQuien) {
-        const box = document.getElementById('notification-box');
-        box.innerHTML = `<div class="notif-card">💸 Recibiste <b>$${(monto/1000000).toFixed(2)}M</b> de <b>${deQuien}</b></div>`;
-        box.style.display = 'block';
-        setTimeout(() => box.style.display = 'none', 4000);
-    }
-
     function iniciarSinc() {
         db.ref(`partidas/${gameId}/jugadores/${myName}/balance`).on('value', (s) => {
             if(s.exists()){
                 const b = s.val();
-                document.getElementById('my-balance').innerText = b.toLocaleString('es-ES');
-                
-                // Lógica de Notificación al recibir dinero
                 if (oldBalance > 0 && b > oldBalance) {
-                    // Buscar en el historial el último pago para este jugador
+                    const diff = b - oldBalance;
                     db.ref(`partidas/${gameId}/historial`).limitToLast(1).once('value', (h) => {
                         const logs = h.val();
-                        for(let id in logs) {
-                            if(logs[id].msg.includes(myName)) {
-                                showNotification(b - oldBalance, logs[id].from);
-                            }
-                        }
+                        let remitente = "Alguien";
+                        for(let id in logs) { remitente = logs[id].from; }
+                        showNotification(diff, remitente);
                     });
                 }
                 oldBalance = b;
-
+                document.getElementById('my-balance').innerText = b.toLocaleString('es-ES');
                 if(!esBanco) {
                     if(b <= 0) {
                         document.getElementById('screen-gameOver').style.display = 'flex';
@@ -227,11 +224,11 @@
                         bancoDiv.innerHTML += `
                         <div class="bank-ctrl-group" style="border-color:${data[n].color}">
                             <div style="color:${data[n].color}; font-weight:bold;">${n}</div>
-                            <div class="btn-group">
+                            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">
                                 <button class="btn-mini" style="background:var(--gold);color:black" onclick="pagoEspecial('${n}', 2, 'SALIDA')">SALIDA $2M</button>
                                 <button class="btn-mini" onclick="pagoEspecial('${n}', null, 'ARCA')">ARCA</button>
                                 <button class="btn-mini" onclick="pagoEspecial('${n}', null, 'FORTUNA')">FORTUNA</button>
-                                <button class="btn-mini" onclick="eliminarJugador('${n}')" style="background:var(--danger)">ELIMINAR</button>
+                                <button class="btn-mini" style="background:var(--danger)" onclick="eliminarJugador('${n}')">ELIMINAR</button>
                             </div>
                         </div>`;
                     }
@@ -249,7 +246,7 @@
             let logArray = [];
             for(let id in logs) logArray.push(logs[id]);
             logArray.reverse().forEach(log => {
-                histDiv.innerHTML += `<div class="log-entry"><div style="width:10px;height:10px;border-radius:50%;background:${log.color};margin-top:4px;"></div><div><b style="color:${log.color}">${log.from}</b> ${log.msg}</div></div>`;
+                histDiv.innerHTML += `<div class="log-entry"><div style="width:10px;height:10px;border-radius:50%;background:${log.color};margin-top:4px;flex-shrink:0;"></div><div><b style="color:${log.color}">${log.from}</b> ${log.msg}</div></div>`;
             });
         });
 
@@ -265,29 +262,29 @@
 
     function transferir() {
         const val = parseFloat(document.getElementById('pay-amount').value);
-        if(!val) return;
+        if(!val || val <= 0) return;
         const monto = val * 1000000;
         const destino = document.getElementById('select-target').value;
-        ejecutarTransaccion(myName, destino, monto, `envió $${monto.toLocaleString()} a ${destino}`);
+        ejecutarTransaccion(myName, destino, monto, `envió $${(monto/1000000).toFixed(2)}M a ${destino}`);
         document.getElementById('pay-amount').value = "";
     }
 
     function pagarCarcel() {
-        const monto = 500000; // 0.5M
+        const monto = 500000;
         db.ref(`partidas/${gameId}/jugadores/${myName}/balance`).transaction(a => {
             if(a >= monto) {
                 db.ref(`partidas/${gameId}/jugadores/BANCO/balance`).transaction(s => (s || 0) + monto);
-                registrarLog(myName, `pagó LIBERACIÓN DE CÁRCEL ($0.5M)`, myColor);
+                registrarLog(myName, `pagó CÁRCEL ($0.5M)`, myColor);
                 soundPay.play().catch(e => {});
                 return a - monto;
             }
-            alert("Saldo insuficiente para fianza"); return a;
+            alert("Sin fondos"); return a;
         });
     }
 
     function pagoEspecial(n, mil, t) {
         let m = mil ? mil * 1000000 : parseFloat(prompt(`Monto para ${t}:`)) * 1000000;
-        if(m) ejecutarTransaccion("BANCO", n, m, `pagó ${t} (+$${m.toLocaleString()}) a ${n}`);
+        if(m) ejecutarTransaccion("BANCO", n, m, `pagó ${t} (+$${(m/1000000).toFixed(2)}M) a ${n}`);
     }
 
     function eliminarJugador(n) {
@@ -302,7 +299,7 @@
                 if(!esBanco) { soundPay.currentTime = 0; soundPay.play().catch(e => {}); }
                 return a - mon;
             }
-            alert("Saldo insuficiente"); return a;
+            alert("Sin fondos"); return a;
         });
     }
 
@@ -314,7 +311,7 @@
         document.querySelectorAll('.screen').forEach(sc => sc.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
         document.getElementById('screen-' + s).classList.add('active');
-        event.currentTarget.classList.add('active-nav');
+        document.getElementById('nav-' + s).classList.add('active-nav');
     }
 </script>
 </body>
