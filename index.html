@@ -3,50 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly: Sistema con Sonidos Drive</title>
+    <title>Monopoly Master: Sistema 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; --gold: #f1c40f; --danger: #ef4444; --text-dim: #94a3b8; }
+        :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; --gold: #f1c40f; --danger: #ef4444; --text-dim: #94a3b8; --jail: #64748b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
+        /* Notificación Recibida */
+        #notification-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; max-width: 400px; display: none; }
+        .notif-card { background: var(--primary); color: white; padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; animation: slideDown 0.5s ease; }
+        @keyframes slideDown { from { transform: translateY(-100px); } to { transform: translateY(0); } }
+
         /* Efecto Crisis */
         @keyframes pulse-red {
-            0% { box-shadow: inset 0 0 10px #ef4444; background-color: #0f172a; }
+            0% { box-shadow: inset 0 0 10px #ef4444; }
             50% { box-shadow: inset 0 0 50px #ef4444; background-color: #450a0a; }
-            100% { box-shadow: inset 0 0 10px #ef4444; background-color: #0f172a; }
+            100% { box-shadow: inset 0 0 10px #ef4444; }
         }
         .crisis-mode { animation: pulse-red 1.5s infinite; }
-        .crisis-text { color: #f87171; font-weight: bold; text-transform: uppercase; text-align: center; display: none; margin-bottom: 10px; }
-        .crisis-mode .crisis-text { display: block; }
 
         .screen { display: none; padding: 20px; max-width: 500px; margin: auto; }
         .active { display: block; }
 
-        /* Pantalla Game Over */
+        /* Pantalla GameOver */
         #screen-gameOver { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
-        /* Colores */
-        .color-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .color-dot { height: 45px; border-radius: 12px; border: 3px solid transparent; cursor: pointer; opacity: 0.5; position: relative; transition: 0.3s; }
+        /* Color Picker 10 Colores */
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-dot { height: 40px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; opacity: 0.5; position: relative; transition: 0.2s; }
         .color-dot.selected { border-color: white; opacity: 1; transform: scale(1.1); }
         .color-dot.taken { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
-        .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; }
+        .color-dot.taken::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 12px; }
 
-        /* UI */
-        .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 30px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
+        /* UI Cards */
+        .balance-card { background: linear-gradient(135deg, #10b981, #059669); padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
         .bank-header { background: linear-gradient(135deg, #f1c40f, #f39c12) !important; color: #000 !important; }
         input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
         button { background: var(--primary); border: none; font-weight: bold; cursor: pointer; }
         
-        .player-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 8px; border-left: 5px solid transparent; }
-        .log-entry { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; padding: 10px; border-bottom: 1px solid #334155; }
-        .log-avatar { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+        .jail-btn { background: var(--jail); margin-top: 15px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        .bank-ctrl-group { background: #334155; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--gold); position: relative; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
-        .btn-mini { padding: 8px; font-size: 11px; background: #475569; }
-        .btn-delete { background: var(--danger); width: auto; padding: 5px 10px; font-size: 10px; position: absolute; top: 10px; right: 10px; border-radius: 6px; }
+        .player-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 6px; border-left: 5px solid transparent; }
+        .log-entry { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; padding: 10px; border-bottom: 1px solid #334155; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #334155; z-index: 100; }
         .nav-item { color: var(--text-dim); cursor: pointer; font-size: 12px; }
@@ -55,10 +54,11 @@
 </head>
 <body id="main-body">
 
+    <div id="notification-box"></div>
+
     <div id="screen-gameOver">
         <h1 style="color:var(--danger); font-size: 40px;">BANCARROTA</h1>
-        <p style="color:white; opacity: 0.7;">Tus fondos han llegado a cero.</p>
-        <button onclick="location.reload()" style="width:auto; padding: 10px 40px; margin-top: 20px;">REINTENTAR</button>
+        <button onclick="location.reload()" style="width:auto; padding: 10px 40px;">INICIO</button>
     </div>
 
     <div id="screen-login" class="screen active">
@@ -66,7 +66,7 @@
         <input type="text" id="game-id" placeholder="ID Mesa" onchange="checkTakenColors()">
         <input type="text" id="user-name" placeholder="Tu Nombre (o 'BANCO')">
         
-        <p style="font-size: 12px; color: var(--text-dim); text-align:center;">ELIGE COLOR:</p>
+        <p style="font-size: 11px; color: var(--text-dim); text-align:center;">ELIGE TU COLOR:</p>
         <div class="color-picker" id="picker-container">
             <div class="color-dot" style="background:#ef4444" onclick="selectColor('#ef4444', this)" id="c-#ef4444"></div>
             <div class="color-dot" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)" id="c-#3b82f6"></div>
@@ -74,15 +74,18 @@
             <div class="color-dot" style="background:#ec4899" onclick="selectColor('#ec4899', this)" id="c-#ec4899"></div>
             <div class="color-dot" style="background:#f97316" onclick="selectColor('#f97316', this)" id="c-#f97316"></div>
             <div class="color-dot" style="background:#06b6d4" onclick="selectColor('#06b6d4', this)" id="c-#06b6d4"></div>
+            <div class="color-dot" style="background:#8b5cf6" onclick="selectColor('#8b5cf6', this)" id="c-#8b5cf6"></div>
+            <div class="color-dot" style="background:#84cc16" onclick="selectColor('#84cc16', this)" id="c-#84cc16"></div>
+            <div class="color-dot" style="background:#ffffff" onclick="selectColor('#ffffff', this)" id="c-#ffffff"></div>
+            <div class="color-dot" style="background:#64748b" onclick="selectColor('#64748b', this)" id="c-#64748b"></div>
         </div>
-        <button onclick="conectar()">ACCEDER</button>
+        <button onclick="conectar()">ENTRAR AL JUEGO</button>
     </div>
 
     <div id="screen-wallet" class="screen">
-        <div class="crisis-text">⚠️ ¡FONDOS CRÍTICOS! ⚠️</div>
         <h2 id="display-my-name">...</h2>
         <div id="wallet-card" class="balance-card">
-            <small>SALDO DISPONIBLE</small>
+            <small>TU SALDO</small>
             <div style="font-size: 32px; font-weight: 800;">$<span id="my-balance">0</span></div>
         </div>
 
@@ -91,17 +94,20 @@
         </div>
 
         <div style="background: var(--card); padding: 15px; border-radius: 20px;">
-            <label style="font-size: 12px; color: var(--text-dim)">PAGAR (Ejemplo: 1.5 para 1,5M):</label>
             <select id="select-target"></select>
-            <input type="number" id="pay-amount" step="0.01" placeholder="Monto">
-            <button onclick="transferir()">Realizar Pago</button>
+            <input type="number" id="pay-amount" step="0.01" placeholder="Monto (Ej: 1.5)">
+            <button onclick="transferir()">ENVIAR PAGO</button>
+            
+            <button id="jail-button" class="jail-btn" onclick="pagarCarcel()" style="display:none;">
+                ⛓️ PAGAR CÁRCEL ($0.5M)
+            </button>
         </div>
     </div>
 
     <div id="screen-board" class="screen">
         <h2>Ranking</h2>
         <div id="all-players-list"></div>
-        <h2 style="margin-top:20px">Historial de Turnos</h2>
+        <h2 style="margin-top:20px">Historial</h2>
         <div id="history-list" style="background: var(--card); border-radius: 15px; height: 350px; overflow-y: auto;"></div>
     </div>
 
@@ -111,24 +117,22 @@
     </nav>
 
 <script>
-    // --- SONIDOS DESDE GOOGLE DRIVE (ENLACES DIRECTOS) ---
+    // --- SONIDOS DRIVE ---
     const soundGameOver = new Audio('https://docs.google.com/uc?export=open&id=1w6nUF5t-Cgn5zUeJDrtrzjZvrwW-ytmM');
     const soundPay = new Audio('https://docs.google.com/uc?export=open&id=1GLhuLFagx4P7hMaW1_ZrvLKcB8ANu0Xj');
 
-    const firebaseConfig = { 
-       apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
+    const firebaseConfig = { apiKey: "AIzaSyDbS6OaynoRTUXkNVqKupoXe90SDmu9L_8",
         authDomain: "monopolybanca-14545.firebaseapp.com",
         databaseURL: "https://monopolybanca-14545-default-rtdb.firebaseio.com",
         projectId: "monopolybanca-14545",
         storageBucket: "monopolybanca-14545.firebasestorage.app",
         messagingSenderId: "1080857855874",
         appId: "1:1080857855874:web:86ee79aabeb6437343f19b",
-        measurementId: "G-412MR78Z6J" 
-    };
+        measurementId: "G-412MR78Z6J" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, gameId, esBanco = false, myColor = "#ffffff";
+    let myName, gameId, esBanco = false, myColor = "#ffffff", oldBalance = 0;
 
     function selectColor(color, el) {
         document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
@@ -154,17 +158,24 @@
         myName = document.getElementById('user-name').value.trim();
         if(!gameId || !myName) return;
         esBanco = (myName.toUpperCase() === "BANCO");
-        if(!esBanco && myColor === "#ffffff") return alert("Selecciona un color");
+        if(!esBanco && myColor === "#ffffff") return alert("Elige un color");
         if(esBanco) myColor = "#f1c40f";
 
         db.ref(`partidas/${gameId}/jugadores/${myName}`).once('value', (s) => {
             if(!s.exists()) {
-                const saldo = esBanco ? 215000000 : 15000000;
-                db.ref(`partidas/${gameId}/jugadores/${myName}`).set({ balance: saldo, color: myColor });
-                registrarLog("SISTEMA", `${myName} se unió`, myColor);
+                const inicial = esBanco ? 215000000 : 25000000; // Iniciando con 25M
+                db.ref(`partidas/${gameId}/jugadores/${myName}`).set({ balance: inicial, color: myColor });
+                registrarLog("SISTEMA", `${myName} entró`, myColor);
             } else { myColor = s.val().color; }
             iniciarSinc();
         });
+    }
+
+    function showNotification(monto, deQuien) {
+        const box = document.getElementById('notification-box');
+        box.innerHTML = `<div class="notif-card">💸 Recibiste <b>$${(monto/1000000).toFixed(2)}M</b> de <b>${deQuien}</b></div>`;
+        box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 4000);
     }
 
     function iniciarSinc() {
@@ -173,12 +184,25 @@
                 const b = s.val();
                 document.getElementById('my-balance').innerText = b.toLocaleString('es-ES');
                 
+                // Lógica de Notificación al recibir dinero
+                if (oldBalance > 0 && b > oldBalance) {
+                    // Buscar en el historial el último pago para este jugador
+                    db.ref(`partidas/${gameId}/historial`).limitToLast(1).once('value', (h) => {
+                        const logs = h.val();
+                        for(let id in logs) {
+                            if(logs[id].msg.includes(myName)) {
+                                showNotification(b - oldBalance, logs[id].from);
+                            }
+                        }
+                    });
+                }
+                oldBalance = b;
+
                 if(!esBanco) {
                     if(b <= 0) {
                         document.getElementById('screen-gameOver').style.display = 'flex';
-                        soundGameOver.play().catch(e => console.log("Permiso de audio requerido"));
-                    } 
-                    else if(b <= 1000000) document.getElementById('main-body').classList.add('crisis-mode');
+                        soundGameOver.play().catch(e => {});
+                    } else if(b <= 1000000) document.getElementById('main-body').classList.add('crisis-mode');
                     else document.getElementById('main-body').classList.remove('crisis-mode');
                 }
             }
@@ -203,12 +227,11 @@
                         bancoDiv.innerHTML += `
                         <div class="bank-ctrl-group" style="border-color:${data[n].color}">
                             <div style="color:${data[n].color}; font-weight:bold;">${n}</div>
-                            <button class="btn-delete" onclick="eliminarJugador('${n}')">ELIMINAR</button>
                             <div class="btn-group">
                                 <button class="btn-mini" style="background:var(--gold);color:black" onclick="pagoEspecial('${n}', 2, 'SALIDA')">SALIDA $2M</button>
                                 <button class="btn-mini" onclick="pagoEspecial('${n}', null, 'ARCA')">ARCA</button>
                                 <button class="btn-mini" onclick="pagoEspecial('${n}', null, 'FORTUNA')">FORTUNA</button>
-                                <button class="btn-mini" onclick="pagoEspecial('${n}', null, 'HIPOTECA')">HIPOTECA</button>
+                                <button class="btn-mini" onclick="eliminarJugador('${n}')" style="background:var(--danger)">ELIMINAR</button>
                             </div>
                         </div>`;
                     }
@@ -226,16 +249,17 @@
             let logArray = [];
             for(let id in logs) logArray.push(logs[id]);
             logArray.reverse().forEach(log => {
-                histDiv.innerHTML += `<div class="log-entry"><div class="log-avatar" style="background:${log.color}"></div><div><b style="color:${log.color}">${log.from}</b> ${log.msg}</div></div>`;
+                histDiv.innerHTML += `<div class="log-entry"><div style="width:10px;height:10px;border-radius:50%;background:${log.color};margin-top:4px;"></div><div><b style="color:${log.color}">${log.from}</b> ${log.msg}</div></div>`;
             });
         });
 
         if(esBanco) document.getElementById('wallet-card').classList.add('bank-header');
-        if(esBanco) document.getElementById('bank-panel').style.display = 'block';
+        else document.getElementById('jail-button').style.display = 'block';
+        
         document.getElementById('screen-login').classList.remove('active');
         document.getElementById('screen-wallet').classList.add('active');
         document.getElementById('main-nav').style.display = 'flex';
-        document.getElementById('display-my-name').innerText = esBanco ? "👑 BANCO CENTRAL" : myName;
+        document.getElementById('display-my-name').innerText = esBanco ? "👑 BANCO" : myName;
         document.getElementById('display-my-name').style.color = myColor;
     }
 
@@ -248,8 +272,21 @@
         document.getElementById('pay-amount').value = "";
     }
 
+    function pagarCarcel() {
+        const monto = 500000; // 0.5M
+        db.ref(`partidas/${gameId}/jugadores/${myName}/balance`).transaction(a => {
+            if(a >= monto) {
+                db.ref(`partidas/${gameId}/jugadores/BANCO/balance`).transaction(s => (s || 0) + monto);
+                registrarLog(myName, `pagó LIBERACIÓN DE CÁRCEL ($0.5M)`, myColor);
+                soundPay.play().catch(e => {});
+                return a - monto;
+            }
+            alert("Saldo insuficiente para fianza"); return a;
+        });
+    }
+
     function pagoEspecial(n, mil, t) {
-        let m = mil ? mil * 1000000 : parseFloat(prompt(`Millones para ${t}:`)) * 1000000;
+        let m = mil ? mil * 1000000 : parseFloat(prompt(`Monto para ${t}:`)) * 1000000;
         if(m) ejecutarTransaccion("BANCO", n, m, `pagó ${t} (+$${m.toLocaleString()}) a ${n}`);
     }
 
@@ -262,10 +299,7 @@
             if(a >= mon) {
                 db.ref(`partidas/${gameId}/jugadores/${des}/balance`).transaction(s => (s || 0) + mon);
                 registrarLog(ori, msg, myColor);
-                if(!esBanco) { 
-                    soundPay.currentTime = 0; 
-                    soundPay.play().catch(e => console.log("Interacción requerida")); 
-                }
+                if(!esBanco) { soundPay.currentTime = 0; soundPay.play().catch(e => {}); }
                 return a - mon;
             }
             alert("Saldo insuficiente"); return a;
